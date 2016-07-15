@@ -21,7 +21,8 @@
   },
   "homepage": "https://github.com/sandeepmistry/node-yeelight-blue",
   "dependencies": {
-    "noble-device": "~1.1.0"
+    "babel-cli": "^6.10.1",
+    "noble-device": "~1.4.0"
   },
   "devDependencies": {
     "async": "~0.8.0",
