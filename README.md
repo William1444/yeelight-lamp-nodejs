@@ -1,3 +1,9 @@
+# *NOTE*
+
+This is a WIP. I will work on making this a little more pleasant for others to use and understand...
+
+Thanks to sandeepmistry for his noble module and marcocanc for his reverse engineering efforts on the lamp that made this possible!
+
 # node-yeelight-blue
 
 [![Analytics](https://ga-beacon.appspot.com/UA-56089547-1/sandeepmistry/node-yeelight-blue?pixel)](https://github.com/igrigorik/ga-beacon)
