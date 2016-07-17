@@ -1,3 +1,4 @@
+const EventEmitter = require('events');
 var util = require('util');
 
 var NobleDevice = require('noble-device');
@@ -90,34 +91,19 @@ YeelightLamp.is = function (peripheral) {
 };
 
 YeelightLamp.discoverAndPair = function (client_uuid, callback) {
+    var pairingEm = new EventEmitter();
     console.log('discovering device');
-    YeelightLamp.discover(function (yeelightLamp) {
-        console.log('found ' + yeelightLamp.uuid);
+    YeelightLamp.discover(yeelightLamp => {
+        pairingEm.emit('connected');
+        console.log(`found ${yeelightLamp.uuid}`);
         yeelightLamp.connectAndSetup(err => {
             if (err) console.error(err);
             console.log('connected.. getting notified of pairing changes')
             var notifyCharacteristic = yeelightLamp._characteristics[SERVICE_UUID][NOTIFY_UUID];
-            notifyCharacteristic.on('read', function(data, isNotification) {
-                var pairingStatus = toHexString(data);
-                if (pairingStatus.substring(0, 4) === NOTIFY_STATUS._NOTIFY) {
-                    console.log('pairing notification received')
-                    var pairingResponseCode = pairingStatus.substring(0, 5);
-                    if (pairingResponseCode === NOTIFY_STATUS.AUTHORIZED_DEVICE) {
-                        console.log('already paired, connected and ready to go.');
-                        callback(yeelightLamp);
-                    } else if (pairingResponseCode === NOTIFY_STATUS.AUTHORIZED_PAIRED) {
-                        console.log('device paired successfully')
-                        callback(yeelightLamp);
-                    } else if (pairingResponseCode === NOTIFY_STATUS.NOT_AUTHED) {
-                        console.log('device ready to pair, press the Yeelight lamp\'s scene button.')
-                    } else if (pairingResponseCode === NOTIFY_STATUS.NOT_READY) {
-                        console.log('device is not yet paired and was not ready... maybe you should turn it on.')
-                    } else {
-                        console.log('not paired - code was ' + pairingStatus)
-                    }
-                }
-            });
-            notifyCharacteristic.notify(true, function(error) {
+
+            //register for notifications from yeelight lamp
+            notifyCharacteristic.notify(true, error => {
+                if (err) return console.info(error);
                 console.log('notification of changes to pairing on');
                 console.log('start pairing...');
                 yeelightLamp.writeYeelightStringCharacteristic(CONTROL_UUID, createwritecommand(commands.pair, client_uuid),
@@ -127,12 +113,39 @@ YeelightLamp.discoverAndPair = function (client_uuid, callback) {
                     });
             });
 
-            yeelightLamp.on('disconnect', function () {
+            //handle notifications
+            notifyCharacteristic.on('read', (data, isNotification) => {
+                var notifyData = toHexString(data);
+                if (notifyData.substring(0, 4) === NOTIFY_STATUS._NOTIFY) {
+                    console.log('pairing notification received')
+                    var pairingResponseCode = notifyData.substring(0, 5);
+                    if (pairingResponseCode === NOTIFY_STATUS.AUTHORIZED_DEVICE) {
+                        console.log('already paired, connected and ready to go.');
+                        pairingEm.emit('paired', pairingResponseCode);
+                        callback(yeelightLamp);
+                    } else if (pairingResponseCode === NOTIFY_STATUS.AUTHORIZED_PAIRED) {
+                        console.log('device paired successfully')
+                        pairingEm.emit('paired', pairingResponseCode);
+                        callback(yeelightLamp);
+                    } else if (pairingResponseCode === NOTIFY_STATUS.NOT_AUTHED) {
+                        pairingEm.emit('pairing', pairingResponseCode);
+                        console.log('device ready to pair, press the Yeelight lamp\'s scene button.')
+                    } else if (pairingResponseCode === NOTIFY_STATUS.NOT_READY) {
+                        pairingEm.emit('pairing-failed', pairingResponseCode);
+                        console.log('device is not yet paired and was not ready... maybe you should turn it on.')
+                    } else {
+                        pairingEm.emit('pairing-failed', pairingResponseCode);
+                        pairingEm.emit('notify', notifyData);
+                    }
+                }
+            });
+            yeelightLamp.on('disconnect', e => {
                 console.log('disconnected!');
                 process.exit(0);
             });
         })
     });
+    return pairingEm;
 
 };
 

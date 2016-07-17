@@ -32,7 +32,7 @@ into hex, so all of the data is sent as `Buffer(string, 'hex')`
 ###Pair
 
 Device should be on, to pair with the device, use `discoverAndPair` providing a client id, this can be any valid hex,
-see `test.js` for an example.
+see `test.js` for an example. This returns an event emitter to give you a handle when pairing events have happened.
 
 When the lamp begins to flash, press the Scene Button on your Lamp to pair.
 
@@ -63,6 +63,18 @@ Once paired, the Lamp will notify with `43632` to confirm successful pairing.
 The user provided callback is then provided the Yeelight lamp peripheral.
 
 Future attempts to pair with an already paired lamp will result in instant connection, adn the lamp returning 43634.
+
+#### events
+
+discoverAndPair returns an event emitter to give you a handle when pairing events have happened. See test.js as an example.
+
+These are the following events:
+
+- **connected** when connected to the device (via extension from the noble-device library)
+- **notify** when notified by yeelamp via the notify uuid, returns the hexstring
+- **paired** when pairing is successful, returns the hexstring
+- **pairing** when pairing is in progress and the scene button needs to be pressed on the device, returns the hexstring
+- **pairing-failed** when pairing has failed, returns the hexstring
 
 ### turnOn and turnOff
 The On/Off state is switched with the `4340..` command. `434001` will turn it on, `434002` will turn it off.

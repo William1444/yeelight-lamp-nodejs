@@ -2,7 +2,9 @@ var async = require('async');
 
 var YeelightLamp = require('./index');
 var clientId = '7207d94ecb9e4ec5be6eafa46ed1c07f';
-YeelightLamp.discoverAndPair(clientId, yeelightLamp => {
+var events = require('events')
+
+var pairer = YeelightLamp.discoverAndPair(clientId, yeelightLamp => {
     function gradientColor(doneCallback) {
         var asyncseries = [function (callback) {
             console.log('turnOn');
@@ -108,3 +110,7 @@ YeelightLamp.discoverAndPair(clientId, yeelightLamp => {
         }
     ]);
 });
+
+pairer.on('paired',function(){
+    console.info('I have paired what of it')
+})
