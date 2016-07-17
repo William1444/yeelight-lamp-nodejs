@@ -1,0 +1,80 @@
+#Yeelight Bedside Lamp RE Notes
+
+## General
+
+**Local Name:**           = XMCTD_
+
+## Endpoints
+
+**Service UUID:**         = 8e2f0cbd1a664b53ace6b494e25f87bd
+**Notify UUID:**          = 8f65073d9f574aaaafea397d19d5bbeb
+**Characteristic UUID:**  = aa7d3f342d4f41e0807f52fbf8cf7443
+
+##Notify types:
+When receiving a notification, the first 2 hexes (4 chars) define what is being received
+
+### Device Pairing Status
+
+- `4363..` Device Status
+    -  `1` Unauthorized/Not paired
+    -  `2` Authorized/Paired
+    -  `4` Authorized device (UDID)
+    -  `7` Lamp disconnect imminent
+
+##Command Formatting
+
+Commands are sent via the `noble-device` - `writeDataCharacteristic` command. This takes a buffer. We convert the command
+into hex, so all of the data is sent as `Buffer(string, 'hex')`
+
+##Pairing with the Device
+
+To Pair with the device, use `discoverAndPair`.
+
+When the lamp begins to flash, press the Scene Button on your Lamp to pair.
+
+##Brightness and Color
+setColorAndBrightness(red,green,blue,brightness,callback)
+red, green and blue are integers between 0-255. Brightness between 0-100.
+
+##Temperature and Hue
+Temperature can range from `1700` to `6500`, and Hue from 0 to 100.
+
+##APIs Described
+
+### discoverAndPair
+
+Registers for notify, to subscribe to the lamps events.
+
+Sends the `4367` command with a client uuid to the characteristic.
+
+The lamp then responds with `43631` to signal that it is in pairing mode.
+
+Once paired, the Lamp will notify with `43632` to confirm successful pairing.
+
+The user provided callback is then provided the Yeelight lamp peripheral.
+
+Future attempts to pair with an already paired lamp will result in instant connection, adn the lamp returning 43634.
+
+### turnOn and turnOff
+The On/Off state is switched with the `4340..` command. `434001` will turn it on, `434002` will turn it off.
+
+### setColorAndBrightness
+The color and brightness is changed with a hex string sent to the `4341` command.
+The first hex is the amount of red, then green blue and brightness.
+
+Red, for example is sent as: `4341FF000000000000000000000000000000`.
+
+### setTemperatureAndBrightness
+The temperature and brightness is changed with a hex string sent to the `4343` command. The next 4 are a hex code for
+the temperature, and the following 2 are hex for the brightness. An example for warm (6500) and bright (100) is
+`434319646400000000000000000000000000`.
+
+
+###More Commands
+- Disconnect: `4368`
+- Read color flow: `434c %02lx`
+- Delete color flow: `4373 %02lx`
+- Read lamp name: `4352`
+- Get statistics Data: `438c`
+- Set delay to off: `437f01%02x`
+*Will add more soon...*

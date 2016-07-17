@@ -1,21 +1,14 @@
 var util = require('util');
 
-
 var NobleDevice = require('noble-device');
 var SERVICE_UUID = '8e2f0cbd1a664b53ace6b494e25f87bd';
 var NOTIFY_UUID = '8f65073d9f574aaaafea397d19d5bbeb';
 var CONTROL_UUID = 'aa7d3f342d4f41e0807f52fbf8cf7443';
 
-function toHexString(byteArray) {
+function toHexString(byteArray,minlength) {
     return byteArray.map(function(byte) {
         return ('0' + (byte & 0xFF).toString(16)).slice(-2);
     }).join('')
-}
-
-function toByteArray(hexString){
-    return hexString.match(/.{1,2}/g).map(hex => {
-        return parseInt(hex, 16);
-    });
 }
 
 const NOTIFY_STATUS = {
@@ -30,19 +23,23 @@ const CLIENT_UUID = '7207d94ecb9e4ec5be6eafa46ed1c07c';
 
 const commands = {
     pair: 4367,
+    disconnect: 4368,
     power: {
         on: 434001,
         off: 434002
     },
-    colorAndBrightness: 4341
+    colorAndBrightness: 4341,
+    temperatureAndBrightness: 4341
 };
 //response will be 01
 //press scene button to pair
 //then response is 02 if unpaired before and now paired
 //04 if paired before
 
-function convertinttohex(int) {
-    return String("00" + int.toString(16)).slice(-2).toUpperCase();
+function convertinttohex(int,minLength) {
+    minLength = minLength || 2;
+    var hex = int.toString(16).toUpperCase();
+    return hex.length > minLength ? hex : (Array(minLength+1).join('0') + hex).slice(-minLength);
 }
 
 function createwritecommand(command, args) {
@@ -72,6 +69,20 @@ class YeelightLamp extends NobleDevice {
         this.writeDataCharacteristic(SERVICE_UUID, characteristicUuid, new Buffer(string, 'hex'), callback)
     }
 
+    setTemperatureAndBrightness(temp, brightness, callback) {
+        const tempMin = 1700, tempMax = 6500;
+        temp = temp < tempMin ? tempMin : (temp > tempMax ? tempMax : temp);
+        const args = convertinttohex(temp, 4) + convertinttohex(brightness);
+        return this.writeYeelightStringCharacteristic(CONTROL_UUID,
+            createwritecommand(commands.temperatureAndBrightness, args), callback);
+    }
+
+    disconnect(callback) {
+
+        return this.writeYeelightStringCharacteristic(CONTROL_UUID, createwritecommand(commands.disconnect),
+            super.disconnect.bind(this, callback))
+    }
+
 }
 
 YeelightLamp.is = function (peripheral) {
@@ -80,7 +91,7 @@ YeelightLamp.is = function (peripheral) {
 };
 
 YeelightLamp.discoverAndPair = function (callback) {
-    console.log('discovering device')
+    console.log('discovering device');
     YeelightLamp.discover(function (yeelightLamp) {
         console.log('found ' + yeelightLamp.uuid);
         yeelightLamp.connectAndSetup(err => {

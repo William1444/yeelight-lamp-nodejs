@@ -1,25 +1,25 @@
 {
-  "name": "yeelight-blue",
-  "version": "1.0.0",
-  "description": "A Node.js lib for the yeelight blue and lightstrips",
+  "name": "yeelight-lamp",
+  "version": "0.0.1",
+  "description": "A Node.js lib for the yeelight lamp",
   "main": "index.js",
   "scripts": {
     "test": "jshint *.js"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/sandeepmistry/node-yeelight-blue.git"
+    "url": "https://github.com/William1444/yeelight-lamp-nodejs.git"
   },
   "keywords": [
     "yeelight",
-    "blue"
+    "lamp"
   ],
-  "author": "Sandeep Mistry <sandeep.mistry@gmail.com>",
+  "author": "William Lacy <williamlacy2@gmail.com>",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/sandeepmistry/node-yeelight-blue/issues"
+    "url": "https://github.com/William1444/yeelight-lamp-nodejs/issues"
   },
-  "homepage": "https://github.com/sandeepmistry/node-yeelight-blue",
+  "homepage": "https://github.com/William1444/yeelight-lamp-nodejs",
   "dependencies": {
     "babel-cli": "^6.10.1",
     "noble-device": "~1.4.0"

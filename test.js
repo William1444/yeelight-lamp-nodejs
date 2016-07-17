@@ -3,6 +3,35 @@ var async = require('async');
 var YeelightLamp = require('./index');
 
 YeelightLamp.discoverAndPair(yeelightLamp => {
+    function gradientColor(doneCallback) {
+        var asyncseries = [function (callback) {
+            console.log('turnOn');
+            yeelightLamp.turnOn(function () {
+                console.log('\tdelay');
+                setTimeout(callback, 5000);
+            });
+        }];
+        var rgb = [];
+        var target;
+        rgb[0] = rgb[1] = rgb[2] = target = 0;
+        while (target < 3) {
+            if (rgb[target] > 255) {
+                target++;
+            } else {
+                rgb[target]+=30;
+                asyncseries.push((function(r,g,b) {
+                    return function(cb){
+                        yeelightLamp.setColorAndBrightness(r,g,b, 100, function () {
+                            console.log(r,g,b);
+                            setTimeout(cb, 10);
+                        });
+                    }
+                })(rgb[0],rgb[1],rgb[2]));
+            }
+        }
+        asyncseries.push(doneCallback)
+        async.series(asyncseries);
+    };
     function lightSequence(doneCallback) {
         async.series([
             function (callback) {
@@ -16,6 +45,20 @@ YeelightLamp.discoverAndPair(yeelightLamp => {
                 console.log('setColorAndBrightness - red');
                 yeelightLamp.setColorAndBrightness(255, 0, 0, 100, function () {
                     console.log('\tdelay');
+                    setTimeout(callback, 5000);
+                });
+            },
+            function (callback) {
+                console.log('setTemperatureAndBrightness cold');
+                yeelightLamp.setTemperatureAndBrightness(1700,100, err => {
+                    console.log('\tdelay - temp set');
+                    setTimeout(callback, 5000);
+                });
+            },
+            function (callback) {
+                console.log('setTemperatureAndBrightness warm');
+                yeelightLamp.setTemperatureAndBrightness(6500,100, err => {
+                    console.log('\tdelay - temp set');
                     setTimeout(callback, 5000);
                 });
             },
