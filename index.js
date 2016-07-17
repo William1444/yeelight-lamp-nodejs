@@ -79,8 +79,11 @@ class YeelightLamp extends NobleDevice {
 
     disconnect(callback) {
 
-        return this.writeYeelightStringCharacteristic(CONTROL_UUID, createwritecommand(commands.disconnect),
-            super.disconnect.bind(this, callback))
+        return this.writeYeelightStringCharacteristic(CONTROL_UUID, createwritecommand(commands.disconnect), args => {
+            this.emit('user-disconnect');
+            super.disconnect.bind(this, callback);
+        });
+
     }
 
 }
@@ -139,9 +142,9 @@ YeelightLamp.discoverAndPair = function (client_uuid, callback) {
                     }
                 }
             });
-            yeelightLamp.on('disconnect', e => {
+            yeelightLamp.on('disconnect', args => {
+                pairingEm.emit('disconnect');
                 console.log('disconnected!');
-                process.exit(0);
             });
         })
     });
