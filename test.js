@@ -1,8 +1,8 @@
 var async = require('async');
 
 var YeelightLamp = require('./index');
-
-YeelightLamp.discoverAndPair(yeelightLamp => {
+var clientId = '7207d94ecb9e4ec5be6eafa46ed1c07f';
+YeelightLamp.discoverAndPair(clientId, yeelightLamp => {
     function gradientColor(doneCallback) {
         var asyncseries = [function (callback) {
             console.log('turnOn');

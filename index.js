@@ -16,10 +16,9 @@ const NOTIFY_STATUS = {
     NOT_AUTHED: '43631',
     AUTHORIZED_PAIRED: '43632',
     AUTHORIZED_DEVICE: '43634',
+    NOT_READY: '43636',
     DISCONNECT_IMMINENT: '43637'
 };
-
-const CLIENT_UUID = '7207d94ecb9e4ec5be6eafa46ed1c07c';
 
 const commands = {
     pair: 4367,
@@ -90,7 +89,7 @@ YeelightLamp.is = function (peripheral) {
     return localName && (localName === 'Yeelight Blu' || localName === 'LightStrips' || /^XMCTD_.*$/.test(localName));
 };
 
-YeelightLamp.discoverAndPair = function (callback) {
+YeelightLamp.discoverAndPair = function (client_uuid, callback) {
     console.log('discovering device');
     YeelightLamp.discover(function (yeelightLamp) {
         console.log('found ' + yeelightLamp.uuid);
@@ -102,9 +101,17 @@ YeelightLamp.discoverAndPair = function (callback) {
                 var pairingStatus = toHexString(data);
                 if (pairingStatus.substring(0, 4) === NOTIFY_STATUS._NOTIFY) {
                     console.log('pairing notification received')
-                    if (pairingStatus.substring(0, 5) === NOTIFY_STATUS.AUTHORIZED_DEVICE) {
-                        console.log('pairing status is now authorized');
+                    var pairingResponseCode = pairingStatus.substring(0, 5);
+                    if (pairingResponseCode === NOTIFY_STATUS.AUTHORIZED_DEVICE) {
+                        console.log('already paired, connected and ready to go.');
                         callback(yeelightLamp);
+                    } else if (pairingResponseCode === NOTIFY_STATUS.AUTHORIZED_PAIRED) {
+                        console.log('device paired successfully')
+                        callback(yeelightLamp);
+                    } else if (pairingResponseCode === NOTIFY_STATUS.NOT_AUTHED) {
+                        console.log('device ready to pair, press the Yeelight lamp\'s scene button.')
+                    } else if (pairingResponseCode === NOTIFY_STATUS.NOT_READY) {
+                        console.log('device is not yet paired and was not ready... maybe you should turn it on.')
                     } else {
                         console.log('not paired - code was ' + pairingStatus)
                     }
@@ -113,7 +120,7 @@ YeelightLamp.discoverAndPair = function (callback) {
             notifyCharacteristic.notify(true, function(error) {
                 console.log('notification of changes to pairing on');
                 console.log('start pairing...');
-                yeelightLamp.writeYeelightStringCharacteristic(CONTROL_UUID, createwritecommand(commands.pair, CLIENT_UUID),
+                yeelightLamp.writeYeelightStringCharacteristic(CONTROL_UUID, createwritecommand(commands.pair, client_uuid),
                     err => {
                         if (err) console.error(err);
                         console.log('pair command sent successfully');

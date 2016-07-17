@@ -18,7 +18,8 @@ When receiving a notification, the first 2 hexes (4 chars) define what is being 
 - `4363..` Device Status
     -  `1` Unauthorized/Not paired
     -  `2` Authorized/Paired
-    -  `4` Authorized device (UDID)
+    -  `4` Already authorized device (UUID)
+    -  `6` Device not ready to pair (maybe it is off)
     -  `7` Lamp disconnect imminent
 
 ##Command Formatting
@@ -28,9 +29,17 @@ into hex, so all of the data is sent as `Buffer(string, 'hex')`
 
 ##Pairing with the Device
 
-To Pair with the device, use `discoverAndPair`.
+###Pair
+
+Device should be on, to pair with the device, use `discoverAndPair` providing a client id, this can be any valid hex,
+see `test.js` for an example.
 
 When the lamp begins to flash, press the Scene Button on your Lamp to pair.
+
+###Unpair
+
+Currently, I do not know if the lamp has a code for unpairing, if this is found please let me know. To unpair, you can
+change the client id, and this will cause a repair the next time the `discoverAndPair` api is used.
 
 ##Brightness and Color
 setColorAndBrightness(red,green,blue,brightness,callback)
